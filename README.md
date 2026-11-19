@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/35084480/README.md)
+
 # Layered Memory · 给聊天助手的三层记忆
 
 一个**不依赖向量库**的本地记忆方案：人格 + 状态 + 事件，存在一个 SQLite 文件里，按「关联 × 时效 × 重要度」检索，每周离线整理一次。
