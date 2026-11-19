@@ -76,4 +76,29 @@ MIT。见 [LICENSE](LICENSE)。如果要把版权行改成你的名字，直接�
 
 ## English
 
-A small, dependency-light memory layer for chat assistants: persona + versioned facts + episodic memories in SQLite. Retrieval is bigram relevance × time decay × importance (no vector database). Old values are superseded, never deleted; the raw transcript is kept. A weekly "dreaming" pass merges duplicates and corrects notes against the transcript. Run `python demo.py` offline; design notes are in `docs/design.md` (Chinese).
+Layered Memory is a small, self-contained memory layer for chat assistants. It keeps three kinds of state in one SQLite file:
+
+Persona — static text, loaded in full on every turn.
+Facts — single-valued state such as home city, job, or current project. Values are versioned: a new value supersedes the old one, but nothing is deleted, so the model can still say "that was before".
+Episodes — the raw transcript is kept forever; older stretches are compressed into 3–5 sentence summaries that point back to the original message range.
+Retrieval scores each memory with relevance × recency × importance (multiplication, not addition), so an irrelevant item cannot float up just because it is old or important. Relevance uses character bigrams, which works for Chinese without a tokenizer; recency decays from the last time the memory was used, not from when it was created. Context is assembled in a fixed order — persona, facts, recent conversation, then pinned or associated memories right before the user's message — under token budgets rather than item counts.
+
+A weekly offline pass ("dreaming") re-reads the transcript, merges duplicate memories, and corrects notes that contradict the source. It only edits or soft-merges; it never deletes the transcript.
+
+Quick start (offline, no API key)
+bash
+
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python demo.py
+python -m unittest discover -s tests -v
+Using your own model
+llm.py posts to any OpenAI-compatible /chat/completions endpoint. Set DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, and DEEPSEEK_MODEL, or replace the chat() function. The extraction and dreaming prompts are in Chinese; run demo.py first, then adjust the rules in extract.py / dream.py.
+
+Limitations
+Relevance is literal bigram matching, so synonyms are missed. The dreaming pass can pick the wrong duplicate to keep and has no rollback. Storage is single-user SQLite, not a multi-tenant service. Design notes (Chinese) are in docs/design.md.
+
+License
+MIT.
